@@ -41,11 +41,12 @@ class JiraPerformanceComparisonIT {
     fun shouldComparePerformance() {
         val pool = Executors.newCachedThreadPool()
         val baseline = pool.submitWithLogContext("baseline") {
-            benchmark(File("jira-baseline.properties"), JiraDcScenario::class.java, SlowAndMeaningful())
-        }
-        val experiment = pool.submitWithLogContext("experiment") {
             benchmark(File("jira-experiment.properties"), JiraCloudScenario::class.java, SlowAndMeaningful())
         }
+        val experiment = pool.submitWithLogContext("experiment") {
+            benchmark(File("jira-experiment2.properties"), JiraCloudScenario::class.java, SlowAndMeaningful.Eager())
+        }
+
         val results = listOf(baseline, experiment).map { it.get().prepareForJudgement(FullTimeline()) }
         FullReport().dump(
             results = results,
@@ -56,8 +57,7 @@ class JiraPerformanceComparisonIT {
 
     @Test
     fun shouldOnlyProcessGatheredData() {
-        val task = "2020-03-06T14-00-16.448"
-
+        val task = "eager_noneager"
         val baselineProperties = CohortProperties.load(File("jira-baseline.properties"))
         val experimentProperties = CohortProperties.load(File("jira-experiment.properties"))
         val metricFormat = MetricCompactJsonFormat()
