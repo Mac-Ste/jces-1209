@@ -19,7 +19,6 @@ import jces1209.vu.JiraDcScenario
 import org.apache.logging.log4j.core.config.ConfigurationFactory
 import org.junit.Test
 import java.io.File
-import java.net.URI
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
@@ -29,7 +28,7 @@ import java.util.concurrent.Executors.newCachedThreadPool
 class JiraPerformanceComparisonIT {
 
     private val workspace = RootWorkspace(Paths.get("build")).currentTask
-    private val quality: BenchmarkQuality = SlowAndMeaningful()
+    private val quality: BenchmarkQuality = SlowAndMeaningful.Builder().build()
 
     init {
         ConfigurationFactory.setConfigurationFactory(LogConfigurationFactory(workspace))
@@ -98,17 +97,8 @@ class JiraPerformanceComparisonIT {
         )
         val behavior = quality.behave(scenario)
             .let { VirtualUserBehavior.Builder(it) }
-            .avoidLeakingPersonalData(properties.jira)
             .build()
         return VirtualUserOptions(target, behavior)
-    }
-
-    private fun VirtualUserBehavior.Builder.avoidLeakingPersonalData(
-        uri: URI
-    ) = apply {
-        if (uri.host.endsWith("atlassian.net")) {
-            diagnosticsLimit(0)
-        }
     }
 
     private fun dumpMegaSlowWaterfalls(
